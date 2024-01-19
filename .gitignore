@@ -1,11 +1,14 @@
 ### Custom ###
+*.ipynb
+_*/*
+_*.*
+.*/*
+.*.*
 .env
-.temp/
+genv/
 .vscode/
 openai-env/
 .streamlit/
-genv/
-set_tip.md
 
 # Created by https://www.toptal.com/developers/gitignore/api/python
 # Edit at https://www.toptal.com/developers/gitignore?templates=python

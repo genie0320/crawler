@@ -1,18 +1,19 @@
-import os
-from dotenv import load_dotenv
+from bs4 import BeautifulSoup
+import requests
+import time
+import random
 
-load_dotenv()
+def go_to_page(url, head_info): 
+    # random_sec = random.uniform(3,10)
+    # time.sleep(random_sec)
+    URL = url
+    HEADERS = head_info
+    response = requests.get(URL, timeout=5, headers=HEADERS)
+    soup = BeautifulSoup(response.content, "html.parser", from_encoding='utf-8')
+    return [response.status_code, URL, soup]
 
-api_key = os.getenv("API_KEY")
-debug_mode = os.getenv("DEBUG")
+---
 
-print(f"API Key: {api_key}")
-print(f"Debug Mode: {debug_mode}")
-
-'''
-python -m venv genv
-genv\Scripts\activate
-pip install python-dotenv
-python main.py
-pip freeze > requirements.txt
-'''
+print(soup_pot[0], soup_pot[1])
+print(soup_pot[2].h1)
+soup = soup_pot[2]
