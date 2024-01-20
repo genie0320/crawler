@@ -1,3 +1,4 @@
+# %%
 import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -6,14 +7,15 @@ from selenium.webdriver.chrome.options import Options
 import time
 import random
 
-def go_to_page(url, head_info): #by requests
+# %%
+def go_to_page(url, head_info): # by requests
     URL = url
     HEADERS = head_info
     response = requests.get(URL, timeout=5, headers=HEADERS)
     soup = BeautifulSoup(response.content, "html.parser", from_encoding='utf-8')
     return [response.status_code, URL, soup, f'type: {type(soup)}']
 
-def get_page_html(url, *args):
+def get_page_html(url, *args): # by selenium
     result = []
     driver = webdriver.Chrome()
     driver.get(url)
@@ -31,14 +33,19 @@ def get_page_html(url, *args):
         save_html_to_txt(html, f"{url[:-5]}.txt")
         return html, driver
 
-def bs_converter(html):
+def bs_converter(html, url):
     title_tag = html.select_one('.prod_title')
-    title = title_tag.text
-    table_tag = html.find_all(class_='book_contents_list')
-    _tt = table_tag[0].text
-    content_table = str(_tt).split('<br/>')
-    content_table_cleand = list(filter(lambda x: x.strip(), content_table))
-    return [title,content_table_cleand]
+    if title_tag:
+        title = title_tag.text
+        table_tag = html.find_all(class_='book_contents_list')
+        _tt = table_tag[0].text
+        content_table = str(_tt).split('<br/>')
+        content_table_cleand = list(filter(lambda x: x.strip(), content_table))
+        return [title,content_table_cleand]
+    else:
+        print(f'error : {url}')
+        return [f'●●●●●● error : {url}']
+
 
 def sl_converter(itms):
     title = itms[0][0]
@@ -54,29 +61,37 @@ def save_html_to_txt(content, file_name):
     with open(f'{file_name}_{now}.txt', "w", encoding="utf-8") as file:
         file.write(str(content))
 
-# _____________________________________ 설정 ______________________________________
 
-# TODO: 변수명 정리하기
-# TODO: 컨버터들 > 클래스사용할 수 있을지 알아보기
+# %%
+keyword = ''
+start_url = f"https://search.kyobobook.co.kr/search?keyword={keyword}&gbCode=TOT&target=total"
+root_url = '' 
+headers = {
+    'User-Agent' : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+}
 
-# _____________________________________ 스크랩시작 ______________________________________
+options = Options()
+options.headers = headers
+options.add_experimental_option("detach", True)
 
+# %%
 soup_pot = go_to_page(start_url, headers)
+
+# print(soup_pot[0], soup_pot[1])
+# print(soup_pot[2].h1)
 
 soup = soup_pot[2]
 
-# _____________________________________ 링크추출 ______________________________________
-
-best_books = soup.find_all(class_='prod_info', limit=3)
+# %%
+best_books = soup.find_all(class_='prod_info', limit=1)
 books_url = []
 
 for book in best_books:
     url = book['href'] 
     books_url.append(url)
 
-
-# _____________________________________ 흐름제어 ______________________________________
-
+# print(books_url)
+# %%
 books = []
 for url in books_url:
     random_sec = random.uniform(3,5)
@@ -87,18 +102,15 @@ for url in books_url:
 
     if not content[2].contents:
         s_books, browser= get_page_html(url, '.prod_title', '.book_contents_item')
-        converted = sl_converter(s_books)
+        converted = [sl_converter(s_books)]
         # browser.close()
     else :
-        converted = bs_converter(content[2])
+        converted = [bs_converter(content[2],url)]
 
+    converted.append(url)
     books.append(converted)
-    print(converted,'************************************')
+    print(converted[1],converted[0],'************************************')
 
 browser.quit()
 
-# save_html_to_txt(books, 'books')
-
-# _____________________________________ 인쇄설정 ______________________________________
-
-# print(books_url)
+save_html_to_txt(books, 'books')
